@@ -1,0 +1,11 @@
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+    let builder = tauri::Builder::default();
+
+    #[cfg(desktop)]
+    let builder = builder.plugin(tauri_plugin_process::init());
+
+    builder
+        .run(tauri::generate_context!())
+        .expect("error while running Lethean mobile");
+}

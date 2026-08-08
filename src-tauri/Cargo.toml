@@ -1,0 +1,29 @@
+[package]
+name = "lethean_mobile"
+version = "0.1.0"
+description = "Lethean - zero-knowledge encrypted vault"
+edition = "2021"
+rust-version = "1.77.2"
+
+[lib]
+name = "lethean_mobile_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-process = "2"
+tauri-plugin-updater = "2"
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

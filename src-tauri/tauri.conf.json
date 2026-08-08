@@ -1,0 +1,35 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Lethean",
+  "version": "0.1.0",
+  "identifier": "org.umut.lethean",
+  "build": {
+    "frontendDist": "../client/dist",
+    "beforeDevCommand": "cd client && npm install && npm run set-backend-url -- https://CHANGEME && npm run watch",
+    "beforeBuildCommand": "cd client && npm install && npm run set-backend-url -- https://CHANGEME && npm run build"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "title": "Lethean",
+        "url": "index.html",
+        "devtools": true,
+        "useHttpsScheme": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; img-src 'self' blob: data:; media-src 'self' blob:; frame-src blob:; connect-src 'self' https://CHANGEME; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+      "freezePrototype": true,
+      "dangerousDisableAssetCspModification": false
+    }
+  },
+  "bundle": {
+    "active": false,
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png"
+    ]
+  }
+}

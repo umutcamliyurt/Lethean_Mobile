@@ -1,0 +1,6 @@
+{
+  "identifier": "default",
+  "description": "Minimum permissions for Lethean.",
+  "windows": ["main"],
+  "permissions": []
+}
