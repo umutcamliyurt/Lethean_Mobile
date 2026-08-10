@@ -22,6 +22,11 @@ Everything in the [web client](https://github.com/umutcamliyurt/Lethean/blob/mai
 
 - Code fixed at install time, no re-fetch on every launch
 - No browser required
+- No disk-persisted WebView state: HTTP/disk cache, WebSQL, saved form
+  data, etc. are all disabled, and
+  localStorage is wiped on every launch
+- Excluded from Android's OS-level app backup, so none of the above can
+  leave the device via cloud backup or `adb backup`
 
 ## Building
 
@@ -47,12 +52,8 @@ in `src-tauri/tauri.conf.json`, both must match.
 ### First-time project setup
 
 ```bash
-npm run tauri android init
+npm run android:init
 ```
-
-This generates `src-tauri/gen/android/`. It's regenerated (and wiped)
-by this command, so signing config and any manual native-side edits
-need to be reapplied after a clean init.
 
 ### Signing
 
@@ -72,7 +73,7 @@ and wire it into `src-tauri/gen/android/app/build.gradle.kts`'s
 ### Build
 
 ```bash
-npm run tauri android build --release
+npm run android:build
 ```
 
 Output APK/AAB lands under
@@ -89,6 +90,13 @@ section covers only what changes by shipping an installed Android app.
 - **Server-pushed code tampering.** The web version's biggest weak point,
   a compromised or coerced server silently serving different JavaScript to
   a specific target, no longer works.
+- **Casual on-device forensic recovery of vault activity.** No cache,
+  cookie, WebSQL, form-data, or Safe Browsing artifacts survive a
+  normal app lifecycle (background, kill, relaunch), and none can be
+  pulled off via Android's OS-level backup path. This closes off
+  recovery from a cold device image or a routine backup extraction,
+  it is not a defense against a live forensic capture of the running
+  process (see below).
 
 ### Out of scope / not defended against
 
@@ -96,6 +104,12 @@ section covers only what changes by shipping an installed Android app.
   version, a compromised operating system, tampered WebView runtime, or
   seized unlocked device is out of scope. This is device and
   operational-security territory, not something code delivery can fix.
+- **Live memory capture.** A seized, unlocked device with root or
+  forensic tooling could still recover WebView process memory, or
+  catch data mid-write before a clear call fires. The no-disk-cache
+  measures above stop artifacts from persisting to disk; they don't
+  make the running process itself unreadable to someone with that
+  level of device access.
 
 ## License
 
