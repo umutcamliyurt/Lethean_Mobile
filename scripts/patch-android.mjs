@@ -27,7 +27,7 @@ const pkgPath = identifier.split(".").join("/");
 const mainActivityDir = join(androidRoot, "app", "src", "main", "java", pkgPath);
 const mainActivityPath = join(mainActivityDir, "MainActivity.kt");
 
-const MARKER = "// patch-android: no-disk-cache v2";
+const MARKER = "// patch-android: no-disk-cache+insets v4";
 
 const mainActivitySrc = `package ${identifier}
 
@@ -36,11 +36,14 @@ ${MARKER}
 // edit that script instead so the fix survives \`tauri android init\`.
 
 import android.os.Bundle
+import android.view.View
 import android.webkit.CookieManager
 import android.webkit.WebSettings
 import android.webkit.WebStorage
 import android.webkit.WebView
 import androidx.activity.enableEdgeToEdge
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 
 class MainActivity : TauriActivity() {
 
@@ -64,6 +67,37 @@ class MainActivity : TauriActivity() {
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, false)
 
         clearAllWebViewData(webView)
+
+        ViewCompat.setOnApplyWindowInsetsListener(webView) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val density = view.resources.displayMetrics.density
+
+            val top = bars.top / density
+            val right = bars.right / density
+            val bottom = bars.bottom / density
+            val left = bars.left / density
+
+            val js = """
+                document.documentElement.style.setProperty('--android-inset-top', '\${top}px');
+                document.documentElement.style.setProperty('--android-inset-right', '\${right}px');
+                document.documentElement.style.setProperty('--android-inset-bottom', '\${bottom}px');
+                document.documentElement.style.setProperty('--android-inset-left', '\${left}px');
+            """.trimIndent()
+
+            webView.evaluateJavascript(js, null)
+
+            insets
+        }
+
+        webView.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(v: View) {
+                ViewCompat.requestApplyInsets(v)
+            }
+            override fun onViewDetachedFromWindow(v: View) {}
+        })
+        if (webView.isAttachedToWindow) {
+            ViewCompat.requestApplyInsets(webView)
+        }
     }
 
     override fun onPause() {
