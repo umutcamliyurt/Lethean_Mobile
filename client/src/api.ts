@@ -28,6 +28,10 @@ function authHeaders(): Record<string, string> {
   return vaultId ? { Authorization: `Bearer ${vaultId}` } : {};
 }
 
+function privateFetch(input: string, init: RequestInit = {}): Promise<Response> {
+  return fetch(input, { cache: 'no-store', referrerPolicy: 'no-referrer', ...init });
+}
+
 function assertSafeId(id: string): string {
   if (typeof id !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(id)) {
     throw new Error('Invalid file id');
@@ -139,13 +143,13 @@ export async function listFiles({ offset = 0, limit = null }: ListFilesOptions =
   if (offset) params.set('offset', String(offset));
   if (limit != null) params.set('limit', String(limit));
   const qs = params.toString();
-  const res = await fetch(`${BASE_URL}/files${qs ? `?${qs}` : ''}`, { headers: authHeaders(), credentials: 'omit' });
+  const res = await privateFetch(`${BASE_URL}/files${qs ? `?${qs}` : ''}`, { headers: authHeaders(), credentials: 'omit' });
   await checkOk(res, 'Could not load files');
   return res.json() as Promise<FileRecord[]>;
 }
 
 export async function getUsage(): Promise<UsageResponse> {
-  const res = await fetch(`${BASE_URL}/usage`, { headers: authHeaders(), credentials: 'omit' });
+  const res = await privateFetch(`${BASE_URL}/usage`, { headers: authHeaders(), credentials: 'omit' });
   await checkOk(res, 'Could not load usage');
   return res.json() as Promise<UsageResponse>;
 }
@@ -154,7 +158,7 @@ const MAX_TRUSTED_CONTENT_LENGTH = 2 * 1024 * 1024 * 1024;
 
 export async function downloadContent(fileId: string, onProgress?: ProgressCallback): Promise<Uint8Array> {
   assertSafeId(fileId);
-  const res = await fetch(`${BASE_URL}/files/${fileId}/blob`, { headers: authHeaders(), credentials: 'omit' });
+  const res = await privateFetch(`${BASE_URL}/files/${fileId}/blob`, { headers: authHeaders(), credentials: 'omit' });
   await checkOk(res, 'Download failed');
 
   const declared = Number(res.headers.get('Content-Length')) || 0;
@@ -181,7 +185,7 @@ export async function downloadContent(fileId: string, onProgress?: ProgressCallb
 
 export async function deleteFile(fileId: string): Promise<void> {
   assertSafeId(fileId);
-  const res = await fetch(`${BASE_URL}/files/${fileId}`, { method: 'DELETE', headers: authHeaders(), credentials: 'omit' });
+  const res = await privateFetch(`${BASE_URL}/files/${fileId}`, { method: 'DELETE', headers: authHeaders(), credentials: 'omit' });
   await checkOk(res, 'Delete failed');
 }
 
@@ -191,7 +195,7 @@ export async function wipeVault(vaultIdToWipe: string): Promise<void> {
 }
 
 export async function sendShredSignal(targetVaultId: string): Promise<void> {
-  const res = await fetch(`${BASE_URL}/vault`, {
+  const res = await privateFetch(`${BASE_URL}/vault`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${targetVaultId}` },
     credentials: 'omit',
