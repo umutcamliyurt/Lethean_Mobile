@@ -27,7 +27,7 @@ const pkgPath = identifier.split(".").join("/");
 const mainActivityDir = join(androidRoot, "app", "src", "main", "java", pkgPath);
 const mainActivityPath = join(mainActivityDir, "MainActivity.kt");
 
-const MARKER = "// patch-android: no-disk-cache+insets v4";
+const MARKER = "// patch-android: no-disk-cache+insets v5";
 
 const mainActivitySrc = `package ${identifier}
 
@@ -39,7 +39,6 @@ import android.os.Bundle
 import android.view.View
 import android.webkit.CookieManager
 import android.webkit.WebSettings
-import android.webkit.WebStorage
 import android.webkit.WebView
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.ViewCompat
@@ -60,13 +59,14 @@ class MainActivity : TauriActivity() {
 
         val settings: WebSettings = webView.settings
         settings.cacheMode = WebSettings.LOAD_NO_CACHE
-        settings.saveFormData = false
+        settings.saveFormData = true
+        settings.domStorageEnabled = true
         settings.databaseEnabled = false
         settings.safeBrowsingEnabled = false
 
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, false)
 
-        clearAllWebViewData(webView)
+        clearCacheOnly(webView)
 
         ViewCompat.setOnApplyWindowInsetsListener(webView) { view, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -103,17 +103,12 @@ class MainActivity : TauriActivity() {
     override fun onPause() {
         super.onPause()
         if (::wv.isInitialized) {
-            clearAllWebViewData(wv)
+            clearCacheOnly(wv)
         }
     }
 
-    private fun clearAllWebViewData(webView: WebView) {
+    private fun clearCacheOnly(webView: WebView) {
         webView.clearCache(true)
-        webView.clearHistory()
-        webView.clearFormData()
-        WebStorage.getInstance().deleteAllData()
-        CookieManager.getInstance().removeAllCookies(null)
-        CookieManager.getInstance().flush()
     }
 }
 `;

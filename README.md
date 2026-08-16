@@ -22,11 +22,10 @@ Everything in the [web client](https://github.com/umutcamliyurt/Lethean/blob/mai
 
 - Code fixed at install time, no re-fetch on every launch
 - No browser required
-- No disk-persisted WebView state: HTTP/disk cache, WebSQL, saved form
-  data, etc. are all disabled, and
-  localStorage is wiped on every launch
-- Excluded from Android's OS-level app backup, so none of the above can
-  leave the device via cloud backup or `adb backup`
+- HTTP/disk cache is disabled and wiped on every launch and app pause;
+  WebSQL is disabled
+- Excluded from Android's OS-level app backup, so nothing the app holds
+  on-device can leave via cloud backup or `adb backup`
 
 ## Building
 
@@ -90,13 +89,10 @@ section covers only what changes by shipping an installed Android app.
 - **Server-pushed code tampering.** The web version's biggest weak point,
   a compromised or coerced server silently serving different JavaScript to
   a specific target, no longer works.
-- **Casual on-device forensic recovery of vault activity.** No cache,
-  cookie, WebSQL, form-data, or Safe Browsing artifacts survive a
-  normal app lifecycle (background, kill, relaunch), and none can be
-  pulled off via Android's OS-level backup path. This closes off
-  recovery from a cold device image or a routine backup extraction,
-  it is not a defense against a live forensic capture of the running
-  process (see below).
+- **Cache-based forensic recovery.** No HTTP/disk cache artifacts survive
+  backgrounding, killing, or relaunching the app, and none can be pulled
+  off via Android's OS-level backup path. This closes off cache-based
+  recovery from a cold device image or a routine backup extraction.
 
 ### Out of scope / not defended against
 
@@ -106,9 +102,9 @@ section covers only what changes by shipping an installed Android app.
   operational-security territory, not something code delivery can fix.
 - **Live memory capture.** A seized, unlocked device with root or
   forensic tooling could still recover WebView process memory, or
-  catch data mid-write before a clear call fires. The no-disk-cache
-  measures above stop artifacts from persisting to disk; they don't
-  make the running process itself unreadable to someone with that
+  catch data mid-write before a cache clear fires. The no-disk-cache
+  measures above stop cache artifacts from persisting to disk; they
+  don't make the running process itself unreadable to someone with that
   level of device access.
 
 ## License
